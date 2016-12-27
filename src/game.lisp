@@ -10,34 +10,38 @@
 (defparameter *monster-builders* nil)
 (defparameter *monster-num* 12)
 
-;;;; Orc-battle: The top level function that initiates and starts a game
+;; @func orc-battle
+;; @desc Top level function that initiates a game, runs the game loop (REPL) and also prints win/lose messages.
 
 (defun orc-battle ()
                   (init-player)
                   (init-monsters)
                   (game-loop)
-                  (when (player-dead) 
+                  (when (player-dead)
                         (princ "You were killed by the orcs. Game over!"))
                   (when (monsters-dead)
                         (princ "Congratulations Commodore! You have vanquished all your foes!")))
 
-;;; init-player: Set player state variables to maximum
+;; @func init-player
+;; @desc Instantiate a player object with full health, strength etc.
 
 (defun init-player ()
                    (setf *player-health* 30)
                    (setf *player-strength* 30)
                    (setf *player-agility* 30))
 
-;;; init-monsters
+;; @func init-monsters
+;; @desc Instantiate monster objects with random health etc. based on global variables set.
 
 (defun init-monsters ()
-                     (setf *monsters* 
+                     (setf *monsters*
                            (map 'vector (lambda (x)
                                                 (funcall (nth (random (length *monster-builders*)) *monster-builders*)))
-                                        (make-array *monster-num*)))) 
-                                
+                                        (make-array *monster-num*))))
 
-;;; Game REPL: the loop
+
+;; @func game-loop
+;; @desc The game REPL function.
 
 (defun game-loop ()
                  (unless (or (player-dead) (monsters-dead))
@@ -51,7 +55,7 @@
                                             (or (monster-dead m) (monster-attack m)))
                                     *monsters*)
                          (game-loop)))
-                                      
+
 
 
 ;;; game-loop dependencies
@@ -110,14 +114,14 @@
                     (princ "Monster #: ")
                     (let ((x (read)))
                          (if (not (and (integerp x) (>= x 1) (<= x *monster-num*)))
-                             (progn (princ "That is a not a valid monster.") 
+                             (progn (princ "That is a not a valid monster.")
                                     (pick-monster))
                              (let ((m (aref *monsters* (1- x))))
                                   (if (monster-dead m)
                                       (progn (princ "That monster is already dead. Pick another one.")
                                              (pick-monster))
                                       m)))))
-       
+
 ;;; Monster Management
 
 ;; monsters-dead
@@ -125,15 +129,15 @@
                     (<= (monster-health m) 0))
 
 (defun monsters-dead ()
-                     (every #'monster-dead *monsters*)) 
- 
+                     (every #'monster-dead *monsters*))
+
 ;; show-monsters
 
 (defun show-monsters ()
                      (fresh-line)
                      (princ "Your foes: ")
                      (let ((x 0))
-                          (map 'list 
+                          (map 'list
                                (lambda (m)
                                        (fresh-line)
                                        (princ "  ")
@@ -146,7 +150,7 @@
                                                   (princ " )")
                                                   (monster-show m))))
                                *monsters*)))
-                                        
+
 ;; Monster Structure
 ;; Generic Monster Structure
 (defstruct monster (health (randval 10)))
@@ -183,7 +187,7 @@
                         (princ "A malicious hydra with ")
                         (princ (monster-health m))
                         (princ " heads. "))
-                       
+
 ; Hydra-specific monster-hit
 
 (defmethod monster-hit ((m hydra) x)
@@ -193,10 +197,10 @@
                            (progn (princ "You lop off ")
                                   (princ x)
                                   (princ " of the hydra's heads! "))))
-                                  
-                                  
 
-; Hydra-specific monster-attack 
+
+
+; Hydra-specific monster-attack
 
 (defmethod monster-attack ((m hydra))
                           (let ((x (randval (ash (monster-health m) -1))))
@@ -205,7 +209,7 @@
                                (princ " of its heads. ")
                                (decf *player-health* x)
                                (incf (monster-health m))))
-           
+
 ;; Slime Mold
 
 (defstruct (slime-mold (:include monster)) (sliminess (randval 5)))
@@ -228,8 +232,8 @@
                                (decf *player-agility* x)
                                (when (zerop (random 2))
                                      (princ "It also squirts in your face, and takes away a health point. ")
-                                     (decf *player-health*))))                                     
-                          
+                                     (decf *player-health*))))
+
 
 ;; Brigand
 
@@ -243,11 +247,11 @@
                                (cond ((= x *player-health*)
                                       (princ "A brigand hits you with his slingshot and takes away 2 of your health points. ")
                                       (decf *player-health* 2))
-                     
+
                                      ((= x *player-agility*)
                                       (princ "A brigand hits your leg with his whip and takes away 2 of your agility points. ")
                                       (decf *player-agility* 2))
-                                    
+
                                      ((= x *player-strength*)
                                       (princ "A brigand cuts your arm with his whip and takes away 2 of your strength points. ")
                                       (decf *player-strength* 2)))))
@@ -278,4 +282,3 @@
 ; monster-attack
 
 (defmethod monster-attack (m))
-                          
